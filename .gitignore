@@ -1,0 +1,22 @@
+# LaTeX Auxiliary Files
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# OS and Editor metadata
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+
+# Local generation scripts
+report.html
+generate_pdf.py
+

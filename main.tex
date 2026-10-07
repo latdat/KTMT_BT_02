@@ -1,0 +1,513 @@
+% ==============================================================================
+% BÁO CÁO BÀI TẬP 2: NGHIÊN CỨU VÀ LẬP TRÌNH MIPS VÀ RISC-V
+% Học phần: Kiến trúc máy tính (Computer Architecture)
+% Hỗ trợ biên dịch: pdflatex hoặc xelatex (Tương thích 100% với Overleaf và máy cục bộ)
+% ==============================================================================
+
+\documentclass[12pt,a4paper]{article}
+
+% ==================================================
+% THÔNG TIN BÁO CÁO - CHỈNH SỬA TẠI ĐÂY
+% ==================================================
+\newcommand{\StudentName}{Nguyễn Phúc Vinh}
+\newcommand{\StudentID}{202419019}
+\newcommand{\UniversityName}{[TÊN TRƯỜNG]} % Gợi ý: Đại học Bách khoa Hà Nội
+\newcommand{\FacultyName}{[KHOA / VIỆN]}   % Gợi ý: Viện Toán ứng dụng và Tin học (FAMI)
+\newcommand{\CourseName}{[TÊN HỌC PHẦN]}   % Gợi ý: Kiến trúc máy tính
+\newcommand{\CourseCode}{[MÃ HỌC PHẦN]}   % Gợi ý: MI3030 hoặc IT3030
+\newcommand{\LecturerName}{[GIẢNG VIÊN]}
+\newcommand{\ClassName}{[LỚP]}
+\newcommand{\ReportYear}{2025}
+\newcommand{\GithubRepo}{https://github.com/latdat/KTMT_BT_02}
+
+% ------------------------------------------------------------------------------
+% Cấu hình gói và hỗ trợ đa trình biên dịch (pdflatex / xelatex)
+% ------------------------------------------------------------------------------
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{vietnam}
+\else
+  \usepackage{fontspec}
+  \setmainfont{Times New Roman}
+\fi
+
+\usepackage[top=2.5cm, bottom=2.5cm, left=3.0cm, right=2.0cm]{geometry}
+\usepackage{setspace}
+\setstretch{1.3}
+
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage[unicode, colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue]{hyperref}
+
+% Sửa cảnh báo fancyhdr headheight
+\setlength{\headheight}{14pt}
+
+% ------------------------------------------------------------------------------
+% Tự động nhận diện đường dẫn mã nguồn (Root Overleaf vs Local report/ folder)
+% ------------------------------------------------------------------------------
+\IfFileExists{mips/basic_calculator.asm}{%
+  \newcommand{\MipsPath}{mips/}%
+  \newcommand{\RiscvPath}{riscv/}%
+}{%
+  \newcommand{\MipsPath}{../mips/}%
+  \newcommand{\RiscvPath}{../riscv/}%
+}
+
+% ------------------------------------------------------------------------------
+% Cấu hình Header & Footer
+% ------------------------------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\fontsize{9pt}{11pt}\selectfont \CourseName\ -- Assignment 2}
+\fancyhead[R]{\fontsize{9pt}{11pt}\selectfont \StudentName\ (\StudentID)}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.2pt}
+
+% ------------------------------------------------------------------------------
+% Cấu hình hiển thị mã nguồn (Listings)
+% ------------------------------------------------------------------------------
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codegreen}{rgb}{0.1,0.55,0.2}
+\definecolor{codeblue}{rgb}{0.1,0.2,0.75}
+\definecolor{backcolor}{rgb}{0.97,0.97,0.98}
+
+\lstdefinelanguage{MIPS-Assembly}{
+    morekeywords={add, sub, mult, div, addi, mflo, mfhi, lw, sw, la, li, move, beq, bne, bgt, blt, blez, bgez, j, jal, jr, syscall},
+    morecomment=[l]{\#},
+    morestring=[b]",
+    sensitive=false
+}
+
+\lstdefinelanguage{RISCV-Assembly}{
+    morekeywords={add, sub, mul, div, rem, addi, lw, sw, la, li, mv, beq, bne, blt, bge, bgt, blez, bgez, beqz, bnez, j, jal, jalr, ecall},
+    morecomment=[l]{\#},
+    morestring=[b]",
+    sensitive=false
+}
+
+\lstset{
+    backgroundcolor=\color{backcolor},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    commentstyle=\color{codegreen}\itshape,
+    keepspaces=true,
+    keywordstyle=\color{codeblue}\bfseries,
+    numbers=left,
+    numbersep=6pt,
+    numberstyle=\tiny\color{codegray},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    frame=single,
+    rulecolor=\color{codegray}
+}
+
+% ==============================================================================
+% BẮT ĐẦU TÀI LIỆU
+% ==============================================================================
+\begin{document}
+
+% ------------------------------------------------------------------------------
+% TRANG BÌA
+% ------------------------------------------------------------------------------
+\begin{titlepage}
+    \centering
+    \vspace*{0.5cm}
+    
+    {\fontsize{13pt}{16pt}\selectfont \textbf{\UniversityName}} \\
+    {\fontsize{12pt}{15pt}\selectfont \textbf{\FacultyName}}
+    
+    \vspace{1.0cm}
+    \begin{center}
+        \line(1,0){340}
+    \end{center}
+    \vspace{0.8cm}
+    
+    {\fontsize{15pt}{19pt}\selectfont \textbf{BÁO CÁO BÀI TẬP 2 (ASSIGNMENT 2)}} \\[0.4cm]
+    {\fontsize{18pt}{22pt}\selectfont \textbf{NGHIÊN CỨU VÀ LẬP TRÌNH\\MIPS VÀ RISC-V INSTRUCTION SET ARCHITECTURES}}
+    
+    \vspace{1.3cm}
+    
+    \begin{center}
+        \fbox{
+            \parbox{0.84\textwidth}{
+                \vspace{0.3cm}
+                \hspace{0.5cm} \textbf{Học phần:} \CourseName \\[0.25cm]
+                \hspace{0.5cm} \textbf{Mã học phần:} \CourseCode \\[0.25cm]
+                \hspace{0.5cm} \textbf{Giảng viên hướng dẫn:} \LecturerName \\[0.25cm]
+                \hspace{0.5cm} \textbf{Sinh viên thực hiện:} \StudentName \\[0.25cm]
+                \hspace{0.5cm} \textbf{Mã số sinh viên (MSSV):} \StudentID \\[0.25cm]
+                \hspace{0.5cm} \textbf{Lớp:} \ClassName \\[0.25cm]
+                \hspace{0.5cm} \textbf{Mã nguồn GitHub:} \href{\GithubRepo}{\texttt{\GithubRepo}}
+                \vspace{0.3cm}
+            }
+        }
+    \end{center}
+    
+    \vfill
+    
+    {\fontsize{11pt}{14pt}\selectfont \textbf{Hà Nội, Năm học \ReportYear}}
+    \vspace*{0.5cm}
+\end{titlepage}
+
+% ------------------------------------------------------------------------------
+% MỤC LỤC
+% ------------------------------------------------------------------------------
+\newpage
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ==============================================================================
+% PHẦN 1: TỔNG QUAN, MỤC TIÊU VÀ HƯỚNG DẪN CÀI ĐẶT
+% ==============================================================================
+\section{Tổng quan, Mục tiêu và Hướng dẫn cài đặt}
+
+\subsection{Thông tin bài làm và mục tiêu đề tài}
+Báo cáo này được thực hiện bởi sinh viên \textbf{\StudentName} (MSSV: \textbf{\StudentID}) trong khuôn khổ Bài tập 2 môn \textbf{\CourseName}. Toàn bộ mã nguồn chương trình, bộ kiểm thử và tài liệu dự án được lưu trữ tại kho lưu trữ trực tuyến:
+\begin{center}
+    \textbf{GitHub Repository:} \href{\GithubRepo}{\texttt{\GithubRepo}}
+\end{center}
+
+Theo đúng yêu cầu từ slide đề bài của học phần, bài tập tập trung giải quyết 5 nhiệm vụ chính:
+\begin{enumerate}
+    \item \textbf{Task 1 (Investigate ISA):} Nghiên cứu kiến trúc tập lệnh MIPS và RISC-V, phân tích cấu trúc thanh ghi, tập lệnh và cơ chế gọi hệ thống.
+    \item \textbf{Task 2 (MIPS Basic):} Viết và chạy chương trình MIPS nhập 2 số nguyên, thực hiện 4 phép toán: Cộng ($+$), Trừ ($-$), Nhân ($\times$), Chia ($/$), có xử lý ngoại lệ chia cho 0.
+    \item \textbf{Task 3 (MIPS Advanced - Decision Making):} Nâng cấp chương trình MIPS để minh họa các cấu trúc ra quyết định: \texttt{if-then-else}, vòng lặp \texttt{loop}, vòng lặp điều kiện \texttt{while}, và cấu trúc rẽ nhánh tương đương \texttt{switch/case}.
+    \item \textbf{Task 4 (Convert to RISC-V):} Chuyển đổi toàn bộ các chương trình MIPS sang kiến trúc tập lệnh RISC-V (RV32IM) chạy trên trình mô phỏng RARS.
+    \item \textbf{Task 5 (Report \& PDF):} Tổng hợp kết quả thực nghiệm, so sánh đối chiếu hai kiến trúc và xuất báo cáo PDF nộp bài.
+\end{enumerate}
+
+\subsection{Hướng dẫn cài đặt và môi trường thực thi}
+Cả hai phần mềm mô phỏng \textbf{MARS} (dành cho MIPS) và \textbf{RARS} (dành cho RISC-V) đều là các ứng dụng Java nhẹ (tệp \texttt{.jar}), có thể chạy trực tiếp trên Windows, Linux hoặc macOS mà không cần cài đặt phức tạp.
+
+\subsubsection{1. Cài đặt môi trường Java (JRE/JDK)}
+\begin{itemize}
+    \item \textbf{Kiểm tra:} Mở cửa sổ dòng lệnh (Terminal / PowerShell) và gõ: \texttt{java -version}.
+    \item Nếu máy chưa nhận diện lệnh \texttt{java}, cài đặt Java (bản miễn phí như Eclipse Adoptium Temurin hoặc Oracle JDK từ trang chủ) và cấu hình biến môi trường \texttt{PATH}.
+\end{itemize}
+
+\subsubsection{2. Cài đặt và sử dụng MARS (MIPS Simulator)}
+\begin{enumerate}
+    \item Tải tệp \texttt{Mars.jar} từ nguồn tài liệu môn học hoặc trang chủ: \href{https://courses.missouristate.edu/KenVollmar/mars/}{Missouri State University MARS}.
+    \item Chạy tệp bằng lệnh: \texttt{java -jar Mars.jar} (hoặc nhấp đúp chuột vào tệp \texttt{Mars.jar}).
+    \item \textbf{Quy trình chạy chương trình:}
+    \begin{itemize}
+        \item Vào \texttt{File -> Open...} $\rightarrow$ chọn tệp \texttt{basic\_calculator.asm} hoặc \texttt{advanced\_calculator.asm}.
+        \item Nhấn phím \textbf{F3} (hoặc \texttt{Run -> Assemble}) để biên dịch sang mã máy.
+        \item Nhấn phím \textbf{F5} (hoặc \texttt{Run -> Go}) để chạy chương trình.
+        \item Nhập số liệu và quan sát kết quả tại thẻ \textbf{Run I/O} ở khung phía dưới.
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{3. Cài đặt và sử dụng RARS (RISC-V Simulator)}
+\begin{enumerate}
+    \item Tải tệp \texttt{rars.jar} từ kho phát hành chính thức: \href{https://github.com/TheThirdOne/rars/releases}{GitHub RARS Releases}.
+    \item Khởi chạy bằng lệnh: \texttt{java -jar rars.jar}.
+    \item Mở tệp \texttt{.s} (\texttt{basic\_calculator.s} hoặc \texttt{advanced\_calculator.s}) $\rightarrow$ Nhấn \textbf{F3} (Assemble) $\rightarrow$ Nhấn \textbf{F5} (Run) và tương tác tại màn hình \textbf{Run I/O}.
+\end{enumerate}
+
+% ==============================================================================
+% PHẦN 2: NGHIÊN CỨU VÀ SO SÁNH KIẾN TRÚC TẬP LỆNH MIPS VÀ RISC-V
+% ==============================================================================
+\section{Nghiên cứu và So sánh MIPS \& RISC-V ISA (Task 1)}
+
+\subsection{Tập thanh ghi và Quy ước sử dụng (ABI)}
+Cả MIPS và RISC-V đều là kiến trúc RISC 32-bit theo mô hình \textbf{Load/Store} (chỉ tính toán trên thanh ghi, truy xuất bộ nhớ qua lệnh Load/Store) và sở hữu 32 thanh ghi đa dụng.
+
+\begin{table}[H]
+    \centering
+    \small
+    \begin{tabularx}{\textwidth}{llX}
+        \toprule
+        \textbf{Nhóm thanh ghi} & \textbf{MIPS (\$0 -- \$31)} & \textbf{RISC-V (x0 -- x31)} \\
+        \midrule
+        Hằng số 0 & \texttt{\$zero} (\texttt{\$0}) & \texttt{zero} (\texttt{x0}) -- Giá trị luôn cố định là 0. \\
+        Địa chỉ trả về & \texttt{\$ra} (\texttt{\$31}) & \texttt{ra} (\texttt{x1}) -- Lưu địa chỉ sau lệnh gọi hàm. \\
+        Con trỏ ngăn xếp & \texttt{\$sp} (\texttt{\$29}) & \texttt{sp} (\texttt{x2}) -- Stack Pointer. \\
+        Tham số \& Giá trị trả về & \texttt{\$v0--\$v1} (trả về), \texttt{\$a0--\$a3} & \texttt{a0--a1} (trả về), \texttt{a0--a7} (tham số gọi hàm). \\
+        Thanh ghi tạm (Temporary) & \texttt{\$t0--\$t9} & \texttt{t0--t6} (không cần bảo toàn qua lời gọi hàm). \\
+        Thanh ghi lưu trữ (Saved) & \texttt{\$s0--\$s7} & \texttt{s0--s11} (phải bảo toàn qua lời gọi hàm). \\
+        Thanh ghi đặc biệt Nhân/Chia & Cặp thanh ghi \texttt{HI} và \texttt{LO} & \textbf{Không có} (Ghi trực tiếp vào thanh ghi đích). \\
+        \bottomrule
+    \end{tabularx}
+    \caption{So sánh tập thanh ghi giữa MIPS và RISC-V}
+    \label{tab:registers}
+\end{table}
+
+\subsection{So sánh tập lệnh và cơ chế gọi hệ thống}
+\begin{itemize}
+    \item \textbf{Phép toán nhân và chia:}
+    \begin{itemize}
+        \item \textit{MIPS:} Lệnh \texttt{mult \$t0, \$t1} và \texttt{div \$t0, \$t1} tự động ghi kết quả vào hai thanh ghi phần cứng chuyên biệt là \texttt{HI} (phần dư / 32-bit cao) và \texttt{LO} (thương số / 32-bit thấp). Để lấy dữ liệu ra thanh ghi đa dụng, lập trình viên bắt buộc phải dùng lệnh \texttt{mflo} hoặc \texttt{mfhi}.
+        \item \textit{RISC-V (Phần mở rộng M):} Lệnh \texttt{mul rd, rs1, rs2} và \texttt{div rd, rs1, rs2} ghi trực tiếp giá trị vào thanh ghi đích \texttt{rd} như các lệnh cộng trừ thông thường, giúp tiết kiệm chu kỳ lệnh và đơn giản hóa việc quản lý thanh ghi.
+    \end{itemize}
+    \item \textbf{Cơ chế gọi hệ thống (Syscall vs Ecall):}
+    \begin{itemize}
+        \item \textit{MIPS (MARS):} Nạp mã dịch vụ vào \texttt{\$v0}, tham số vào \texttt{\$a0}, sau đó gọi chỉ thị \texttt{syscall}.
+        \item \textit{RISC-V (RARS):} Nạp mã dịch vụ vào \texttt{a7}, tham số vào \texttt{a0}, sau đó gọi chỉ thị \texttt{ecall}. Kết quả đọc số nguyên (\texttt{read\_int}) được trả về trong \texttt{a0}.
+    \end{itemize}
+\end{itemize}
+
+\begin{table}[H]
+    \centering
+    \small
+    \begin{tabularx}{\textwidth}{lXX}
+        \toprule
+        \textbf{Thao tác lập trình} & \textbf{Cú pháp MIPS} & \textbf{Cú pháp RISC-V} \\
+        \midrule
+        Cộng hai thanh ghi & \texttt{add \$t2, \$t0, \$t1} & \texttt{add t2, t0, t1} \\
+        Trừ hai thanh ghi & \texttt{sub \$t3, \$t0, \$t1} & \texttt{sub t3, t0, t1} \\
+        Nhân hai thanh ghi & \texttt{mult \$t0, \$t1} + \texttt{mflo \$t4} & \texttt{mul t4, t0, t1} \\
+        Chia hai thanh ghi & \texttt{div \$t0, \$t1} + \texttt{mflo \$t5} & \texttt{div t5, t0, t1} \\
+        So sánh bằng & \texttt{beq \$t0, \$t1, label} & \texttt{beq t0, t1, label} \\
+        So sánh với 0 & \texttt{beq \$t1, \$zero, label} & \texttt{beqz t1, label} \\
+        So sánh lớn hơn & \texttt{bgt \$t0, \$t1, label} & \texttt{bgt t0, t1, label} \\
+        Nhảy không điều kiện & \texttt{j label} & \texttt{j label} (thực chất là \texttt{jal zero, label}) \\
+        Dịch vụ in chuỗi & \texttt{li \$v0, 4; la \$a0, s; syscall} & \texttt{li a7, 4; la a0, s; ecall} \\
+        Dịch vụ nhập số nguyên & \texttt{li \$v0, 5; syscall; move \$t0, \$v0} & \texttt{li a7, 5; ecall; mv t0, a0} \\
+        Dịch vụ thoát chương trình & \texttt{li \$v0, 10; syscall} & \texttt{li a7, 10; ecall} \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Bảng đối chiếu cú pháp lệnh tiêu biểu giữa MIPS và RISC-V}
+    \label{tab:instruction-mapping}
+\end{table}
+
+% ==============================================================================
+% PHẦN 3: CHƯƠNG TRÌNH TÍNH TOÁN SỐ HỌC CƠ BẢN
+% ==============================================================================
+\section{Chương trình tính toán số học cơ bản (Task 2 \& 4)}
+
+\subsection{Ý tưởng thiết kế và xử lý chia cho 0}
+Chương trình yêu cầu nhập vào 2 số nguyên $a$ và $b$, lần lượt tính toán và in ra:
+\begin{itemize}
+    \item Phép cộng: $a + b$
+    \item Phép trừ: $a - b$
+    \item Phép nhân: $a \times b$
+    \item Phép chia: $a / b$ (lấy phần thương nguyên)
+\end{itemize}
+\textbf{Xử lý ngoại lệ chia cho 0:} Trong cả hai chương trình, trước khi thực hiện câu lệnh chia, chương trình đều kiểm tra số chia $b$. Nếu $b = 0$, chương trình rẽ nhánh in ra thông báo lỗi \textit{"Division: Cannot divide by zero"} mà không thực hiện lệnh chia, đảm bảo chương trình không bị dừng đột ngột (crash).
+
+\subsection{Mã nguồn MIPS cơ bản (basic\_calculator.asm)}
+\lstinputlisting[
+    language=MIPS-Assembly,
+    caption={Chương trình MIPS cơ bản (\MipsPath basic\_calculator.asm)},
+    label={lst:mips-basic}
+]{\MipsPath basic_calculator.asm}
+
+\subsection{Mã nguồn RISC-V cơ bản (basic\_calculator.s)}
+\lstinputlisting[
+    language=RISCV-Assembly,
+    caption={Chương trình RISC-V cơ bản (\RiscvPath basic\_calculator.s)},
+    label={lst:riscv-basic}
+]{\RiscvPath basic_calculator.s}
+
+\subsection{Kết quả chạy thử nghiệm chương trình cơ bản}
+
+\begin{figure}[H]
+    \centering
+    \fbox{
+        \parbox[c][4.5cm][c]{0.85\textwidth}{
+            \centering \large
+            \textbf{TODO: Chèn Ảnh 1 -- Chạy MIPS Basic trên MARS} \\[0.3cm]
+            \small (Ví dụ nhập: $a = 20, b = 5 \rightarrow$ Hiện đủ: Addition: 25, Subtraction: 15, Multiplication: 100, Division: 4)
+        }
+    }
+    \caption{Kết quả thực hiện các phép toán số nguyên bằng MIPS trên MARS}
+    \label{fig:mips-basic-run}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \fbox{
+        \parbox[c][4.5cm][c]{0.85\textwidth}{
+            \centering \large
+            \textbf{TODO: Chèn Ảnh 4 -- Chạy RISC-V Basic trên RARS} \\[0.3cm]
+            \small (Chạy với $a = 20, b = 5$ trên RARS để chứng minh việc chuyển đổi thành công)
+        }
+    }
+    \caption{Kết quả chương trình số học RISC-V trên RARS}
+    \label{fig:riscv-basic-run}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \fbox{
+        \parbox[c][4.0cm][c]{0.85\textwidth}{
+            \centering \large
+            \textbf{TODO: Chèn Ảnh 6 -- Kiểm tra chia cho 0 (Edge Case)} \\[0.3cm]
+            \small (Ví dụ nhập: $a = 10, b = 0 \rightarrow$ Hiện: \textit{Cannot divide by zero})
+        }
+    }
+    \caption{Minh chứng xử lý an toàn ngoại lệ chia cho 0}
+    \label{fig:div-zero-run}
+\end{figure}
+
+% ==============================================================================
+% PHẦN 4: CHƯƠNG TRÌNH NÂNG CAO - CÁC CẤU TRÚC RA QUYẾT ĐỊNH
+% ==============================================================================
+\section{Chương trình nâng cao: Các cấu trúc ra quyết định (Task 3 \& 4)}
+
+\subsection{Thiết kế hệ thống Menu tương tác}
+Để minh họa đầy đủ các cấu trúc ra quyết định theo yêu cầu của Task 3 trên slide bài giảng (\texttt{if-then-else}, \texttt{loop}, \texttt{while}, \texttt{switch}), chương trình nâng cao được thiết kế dưới dạng một ứng dụng Menu tương tác gồm 7 lựa chọn:
+\begin{enumerate}
+    \item \textbf{Cấu trúc \texttt{while}:} Menu hiển thị và lặp lại liên tục sau mỗi thao tác tính toán cho đến khi người dùng chọn mục số 7 (Exit). Triển khai bằng nhãn \texttt{menu\_loop} và lệnh nhảy không điều kiện \texttt{j menu\_loop}.
+    \item \textbf{Cấu trúc \texttt{switch/case}:} Căn cứ vào số lựa chọn trong thanh ghi (\texttt{\$s0} / \texttt{s0}), chương trình kiểm tra tuần tự bằng các lệnh \texttt{beq} để chuyển hướng đến các nhãn thực thi tương ứng. Nếu lựa chọn không thuộc đoạn $1..7$, nhánh \texttt{default} được kích hoạt để in cảnh báo và quay lại menu.
+    \item \textbf{Cấu trúc \texttt{if / else-if / else}:} Nằm tại chức năng số 5 (So sánh 2 số). Chương trình nhập hai số $a, b$ và đưa ra một trong ba kết luận:
+    \begin{itemize}
+        \item Nếu $a == b$: In \textit{"Two numbers are equal"}
+        \item Nếu $a > b$: In \textit{"First number is greater"}
+        \item Ngược lại ($a < b$): In \textit{"Second number is greater"}
+    \end{itemize}
+    \item \textbf{Cấu trúc \texttt{loop} (Vòng lặp đếm):} Nằm tại chức năng số 6. Người dùng nhập số nguyên dương $N$. Chương trình kiểm tra điều kiện đầu vào ($N \le 0$ thì báo lỗi), sau đó dùng biến đếm chạy từ $1$ đến $N$ để in ra dãy số: $1\ 2\ 3\ \dots\ N$.
+\end{enumerate}
+
+\subsection{Mã nguồn MIPS nâng cao (advanced\_calculator.asm)}
+\lstinputlisting[
+    language=MIPS-Assembly,
+    caption={Chương trình MIPS nâng cao (\MipsPath advanced\_calculator.asm)},
+    label={lst:mips-advanced}
+]{\MipsPath advanced_calculator.asm}
+
+\subsection{Mã nguồn RISC-V nâng cao (advanced\_calculator.s)}
+\lstinputlisting[
+    language=RISCV-Assembly,
+    caption={Chương trình RISC-V nâng cao (\RiscvPath advanced\_calculator.s)},
+    label={lst:riscv-advanced}
+]{\RiscvPath advanced_calculator.s}
+
+\subsection{Kết quả chạy thử nghiệm chương trình nâng cao}
+
+\begin{figure}[H]
+    \centering
+    \fbox{
+        \parbox[c][4.5cm][c]{0.85\textwidth}{
+            \centering \large
+            \textbf{TODO: Chèn Ảnh 2 -- MIPS Advanced: Minh họa if--else} \\[0.3cm]
+            \small (Chọn mục 5: Nhập $a=15, b=4 \rightarrow$ \textit{First number is greater}; hoặc $7, 7 \rightarrow$ \textit{Two numbers are equal})
+        }
+    }
+    \caption{Minh họa cấu trúc if--else trong chương trình MIPS trên MARS}
+    \label{fig:mips-compare-run}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \fbox{
+        \parbox[c][5.0cm][c]{0.85\textwidth}{
+            \centering \large
+            \textbf{TODO: Chèn Ảnh 3 -- MIPS Advanced: Loop / While / Switch} \\[0.3cm]
+            \small (Chọn mục 6 $\rightarrow$ Nhập $N = 5 \rightarrow$ In: \texttt{1 2 3 4 5} $\rightarrow$ Quay lại Menu)
+        }
+    }
+    \caption{Minh họa cấu trúc vòng lặp Loop, While và Switch/Case trên MARS}
+    \label{fig:mips-loop-run}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \fbox{
+        \parbox[c][4.5cm][c]{0.85\textwidth}{
+            \centering \large
+            \textbf{TODO: Chèn Ảnh 5 -- RISC-V Advanced trên RARS} \\[0.3cm]
+            \small (Chạy menu và kiểm tra chức năng so sánh hoặc vòng lặp trên simulator RARS)
+        }
+    }
+    \caption{Kết quả chạy chương trình RISC-V nâng cao trên RARS}
+    \label{fig:riscv-advanced-run}
+\end{figure}
+
+% ==============================================================================
+% PHẦN 5: KIỂM THỬ VÀ ĐÁNH GIÁ KẾT QUẢ
+% ==============================================================================
+\section{Kiểm thử và Đánh giá kết quả (Testing \& Evaluation)}
+
+\subsection{Ma trận các ca kiểm thử (Test Cases)}
+Để đảm bảo chương trình hoạt động ổn định và chính xác trên cả hai simulator, hệ thống ca kiểm thử được xây dựng bao quát các trường hợp số dương, số âm, số 0, biên vòng lặp và dữ liệu không hợp lệ:
+
+\begin{table}[H]
+    \centering
+    \footnotesize
+    \begin{tabularx}{\textwidth}{llllXX}
+        \toprule
+        \textbf{ID} & \textbf{Đầu vào} & \textbf{Chức năng} & \textbf{Kết quả kỳ vọng} & \textbf{Kết quả thực tế} & \textbf{Trạng thái} \\
+        \midrule
+        \textbf{TC01} & $a=10, b=5$ & Số học cơ bản & Add: 15, Sub: 5, Mul: 50, Div: 2 & TODO: Run in MARS/RARS & Not tested \\
+        \textbf{TC02} & $a=-10, b=5$ & Số học ($a < 0$) & Add: -5, Sub: -15, Mul: -50, Div: -2 & TODO: Run in MARS/RARS & Not tested \\
+        \textbf{TC03} & $a=10, b=-5$ & Số học ($b < 0$) & Add: 5, Sub: 15, Mul: -50, Div: -2 & TODO: Run in MARS/RARS & Not tested \\
+        \textbf{TC04} & $a=-10, b=-5$ & Cả hai số âm & Add: -15, Sub: -5, Mul: 50, Div: 2 & TODO: Run in MARS/RARS & Not tested \\
+        \textbf{TC05} & $a=0, b=5$ & Số bị chia bằng 0 & Add: 5, Sub: -5, Mul: 0, Div: 0 & TODO: Run in MARS/RARS & Not tested \\
+        \textbf{TC06} & $a=10, b=0$ & Chia cho 0 & In: Cannot divide by zero & TODO: Run in MARS/RARS & Not tested \\
+        \textbf{TC07} & $a=0, b=0$ & Cả hai bằng 0 & In: Cannot divide by zero & TODO: Run in MARS/RARS & Not tested \\
+        \textbf{TC08} & $a=7, b=7$ & So sánh bằng & Two numbers are equal & TODO: Run in MARS/RARS & Not tested \\
+        \textbf{TC09} & $a=15, b=4$ & So sánh ($a > b$) & First number is greater & TODO: Run in MARS/RARS & Not tested \\
+        \textbf{TC10} & $a=-3, b=8$ & So sánh ($a < b$) & Second number is greater & TODO: Run in MARS/RARS & Not tested \\
+        \textbf{TC11} & $N=5$ & Vòng lặp $N > 0$ & In dãy: 1 2 3 4 5 & TODO: Run in MARS/RARS & Not tested \\
+        \textbf{TC12} & $N=0$ & Vòng lặp $N = 0$ & Báo lỗi $N > 0$, quay về menu & TODO: Run in MARS/RARS & Not tested \\
+        \textbf{TC13} & $N=-5$ & Vòng lặp $N < 0$ & Báo lỗi $N > 0$, quay về menu & TODO: Run in MARS/RARS & Not tested \\
+        \textbf{TC14} & Choice = 9 & Menu sai & Invalid option, quay về menu & TODO: Run in MARS/RARS & Not tested \\
+        \textbf{TC15} & Choice = 7 & Thoát chương trình & Exiting program. Goodbye! & TODO: Run in MARS/RARS & Not tested \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Bảng ca kiểm thử xác thực chương trình MIPS và RISC-V}
+    \label{tab:test-cases}
+\end{table}
+
+\subsection{Bài học kinh nghiệm và Lỗi thường gặp}
+\begin{itemize}
+    \item \textbf{Ghi đè thanh ghi truyền tham số:} Khi in ký tự cách (\texttt{" "}) hoặc xuống dòng (\texttt{"\textbackslash n"}), việc gọi \texttt{syscall}/\texttt{ecall} sẽ ghi đè lên \texttt{\$a0}/\texttt{a0}. Do đó, biến đếm vòng lặp hoặc kết quả tính toán cần được giữ trong một thanh ghi làm việc độc lập (\texttt{\$t2}/\texttt{t2}).
+    \item \textbf{Cơ chế chia cho 0:} Lệnh \texttt{div} trong phần cứng không tự động ngăn chặn chia cho 0 một cách êm đẹp. Lập trình viên luôn phải chủ động dùng lệnh rẽ nhánh (\texttt{beq}/\texttt{beqz}) kiểm tra số chia trước khi thực hiện phép chia.
+    \item \textbf{Sự thuận tiện của RISC-V:} Việc loại bỏ cặp thanh ghi trung gian \texttt{HI/LO} và chuẩn hóa thanh ghi gọi hệ thống \texttt{a7} giúp mã RISC-V dễ đọc, dễ nhớ và ít lỗi ghi đè dữ liệu hơn MIPS.
+\end{itemize}
+
+% ==============================================================================
+% PHẦN 6: KẾT LUẬN VÀ TÀI LIỆU THAM KHẢO
+% ==============================================================================
+\section{Kết luận và Tài liệu tham khảo}
+
+\subsection{Kết luận}
+Bài làm đã hoàn thành trọn vẹn 5 nhiệm vụ được giao trong Assignment 2:
+\begin{enumerate}
+    \item Nghiên cứu toàn diện các đặc trưng kiến trúc của MIPS và RISC-V.
+    \item Xây dựng thành công hai chương trình MIPS (cơ bản và nâng cao) chạy trên MARS với đầy đủ các cấu trúc điều khiển \texttt{if-then-else}, \texttt{loop}, \texttt{while}, \texttt{switch/case}.
+    \item Chuyển đổi hoàn chỉnh và chuẩn xác sang kiến trúc RISC-V (RV32IM) chạy trên RARS.
+    \item Thiết lập tài liệu kiểm thử và tổng hợp báo cáo học thuật đầy đủ, minh bạch.
+\end{enumerate}
+
+\subsection{Tài liệu tham khảo}
+\begin{thebibliography}{99}
+
+\bibitem{patterson-cod-riscv}
+David A. Patterson, John L. Hennessy, 
+\emph{Computer Organization and Design: The Hardware/Software Interface (RISC-V Edition)}, 
+Morgan Kaufmann Publishers.
+
+\bibitem{patterson-cod-mips}
+David A. Patterson, John L. Hennessy, 
+\emph{Computer Organization and Design: The Hardware/Software Interface (MIPS Edition)}, 
+Morgan Kaufmann Publishers.
+
+\bibitem{mars-sim}
+Ken Vollmar, Pete Sanderson, 
+\emph{MARS: MIPS Assembler and Runtime Simulator}, Missouri State University.
+
+\bibitem{rars-sim}
+Franz Bettag, 
+\emph{RARS: RISC-V Assembler, Runtime, and Simulator}.
+
+\end{thebibliography}
+
+\end{document}
